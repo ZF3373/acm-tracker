@@ -1,0 +1,2543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACM Tracker - VSCode Dashboard</title>
+<style>
+/* ============================================
+   Design Token System
+   ============================================ */
+:root {
+  /* Primary - Blue */
+  --primary-50: #EFF6FF;
+  --primary-100: #DBEAFE;
+  --primary-200: #BFDBFE;
+  --primary-300: #93C5FD;
+  --primary-400: #60A5FA;
+  --primary-500: #3B82F6;
+  --primary-600: #2563EB;
+  --primary-700: #1D4ED8;
+  --primary-800: #1E40AF;
+  --primary-900: #1E3A8A;
+
+  /* Semantic Colors */
+  --success-50: #ECFDF5;
+  --success-500: #10B981;
+  --success-600: #059669;
+  --success-700: #047857;
+
+  --warning-50: #FFFBEB;
+  --warning-500: #F59E0B;
+  --warning-600: #D97706;
+
+  --danger-50: #FEF2F2;
+  --danger-500: #EF4444;
+  --danger-600: #DC2626;
+
+  --info-50: #EFF6FF;
+  --info-500: #3B82F6;
+
+  /* Neutral */
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+
+  /* Difficulty Colors */
+  --diff-easy: #10B981;
+  --diff-medium: #3B82F6;
+  --diff-hard: #F59E0B;
+  --diff-veryhard: #EF4444;
+  --diff-expert: #8B5CF6;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+
+  /* Spacing (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+
+  /* Layout */
+  --sidebar-width: 220px;
+  --header-height: 52px;
+}
+
+/* Reset & Base */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  overflow-x: hidden;
+}
+
+/* ============================================
+   Layout Structure
+   ============================================ */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--gray-900);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-normal);
+  z-index: 100;
+}
+
+.sidebar-header {
+  padding: var(--space-5) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.5px;
+}
+
+.sidebar-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: var(--space-4) var(--space-2);
+  overflow-y: auto;
+}
+
+.nav-section {
+  margin-bottom: var(--space-6);
+}
+
+.nav-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(255,255,255,0.35);
+  padding: 0 var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 13px;
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  user-select: none;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.9);
+}
+
+.nav-item.active {
+  background: rgba(59,130,246,0.2);
+  color: white;
+  font-weight: 500;
+}
+
+.nav-item.active .nav-icon {
+  color: var(--primary-400);
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger-500);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  min-width: 18px;
+  text-align: center;
+}
+
+.sidebar-footer {
+  padding: var(--space-4);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.user-mini {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.user-mini:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-400), var(--purple-500));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-handle {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--gray-50);
+}
+
+.topbar {
+  height: var(--header-height);
+  min-height: var(--header-height);
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  gap: var(--space-4);
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2);
+  color: var(--gray-500);
+  border-radius: var(--radius-sm);
+}
+
+.page-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+.page-view {
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+
+.page-view.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   Components: Buttons
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: var(--primary-600);
+  color: white;
+  border-color: var(--primary-600);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-700);
+  border-color: var(--primary-700);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--gray-700);
+  border-color: var(--gray-300);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.btn-success {
+  background: var(--success-600);
+  color: white;
+  border-color: var(--success-600);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: var(--success-700);
+}
+
+.btn-danger {
+  background: var(--danger-500);
+  color: white;
+  border-color: var(--danger-500);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-600);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gray-600);
+  border-color: transparent;
+  padding: 5px 8px;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--gray-100);
+  color: var(--gray-800);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.btn-icon.btn-sm {
+  width: 26px;
+  height: 26px;
+}
+
+/* ============================================
+   Components: Cards
+   ============================================ */
+.card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.card-body {
+  padding: var(--space-5);
+}
+
+.card-footer {
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--gray-100);
+  background: var(--gray-50);
+}
+
+/* Metric Cards */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.metric-card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: all var(--transition-fast);
+}
+
+.metric-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-2);
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.metric-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: var(--space-2);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.metric-change.up {
+  color: var(--success-600);
+  background: var(--success-50);
+}
+
+.metric-change.down {
+  color: var(--danger-600);
+  background: var(--danger-50);
+}
+
+/* Icon in metric card */
+.metric-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-3);
+}
+
+/* ============================================
+   Components: Tags & Badges
+   ============================================ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.difficulty-tag { color: white; }
+
+.diff-easy { background: var(--diff-easy); }
+.diff-medium { background: var(--diff-medium); }
+.diff-hard { background: var(--diff-hard); }
+.diff-veryhard { background: var(--diff-veryhard); }
+.diff-expert { background: var(--diff-expert); }
+
+.oj-tag {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-not_started { background: var(--gray-300); }
+.status-attempting { background: var(--warning-500); animation: pulse 1.5s infinite; }
+.status-ac_completed { background: var(--success-500); }
+.status-gave_up { background: var(--danger-500); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ============================================
+   Components: Tables
+   ============================================ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.data-table thead th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+}
+
+.data-table tbody td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:hover {
+  background: var(--gray-50);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================
+   Components: Form Elements
+   ============================================ */
+.form-input, .form-select {
+  width: 100%;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background: white;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  color: var(--gray-800);
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+.form-group {
+  margin-bottom: var(--space-4);
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: var(--space-2);
+}
+
+.form-hint {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 4px;
+}
+
+/* Toggle / Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 20px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--gray-300);
+  border-radius: 20px;
+  transition: var(--transition-fast);
+}
+
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background: white;
+  border-radius: 50%;
+  transition: var(--transition-fast);
+}
+
+.switch input:checked + .switch-slider {
+  background: var(--primary-500);
+}
+
+.switch input:checked + .switch-slider::before {
+  transform: translateX(18px);
+}
+
+/* ============================================
+   Components: Progress Bar
+   ============================================ */
+.progress-bar {
+  height: 6px;
+  background: var(--gray-200);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  background: var(--primary-500);
+}
+
+/* ============================================
+   Screen-specific Styles
+   ============================================ */
+
+/* === Dashboard Page === */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 380px;
+  }
+}
+
+.oj-account-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.oj-account-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+  transition: all var(--transition-fast);
+  cursor: default;
+}
+
+.oj-account-item:hover {
+  border-color: var(--primary-200);
+  background: var(--primary-50);
+}
+
+.oj-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+}
+
+.oj-cf { background: #1A5276; }
+.oj-luogu { background: #2E86AB; }
+.oj-atcoder { background: #000; }
+.oj-nowcoder { background: #00A0E9; }
+
+.oj-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.oj-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-800);
+}
+
+.oj-handle {
+  font-size: 11px;
+  color: var(--gray-500);
+  font-family: var(--font-mono);
+}
+
+.oj-stats {
+  display: flex;
+  gap: var(--space-4);
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+.sync-btn {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.oj-account-item:hover .sync-btn {
+  opacity: 1;
+}
+
+/* === Evaluation Page === */
+.eval-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .eval-layout {
+    grid-template-columns: 340px 1fr;
+  }
+}
+
+.radar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-6);
+}
+
+.radar-chart-svg {
+  max-width: 280px;
+}
+
+.weak-point-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.weak-point-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+}
+
+.weak-rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-600);
+  flex-shrink: 0;
+}
+
+.weak-info { flex: 1; }
+
+.weak-name { font-size: 13px; font-weight: 500; }
+.weak-desc { font-size: 11px; color: var(--gray-500); }
+
+.weak-score {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger-600);
+}
+
+.gradient-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 140px;
+  padding: var(--space-3) 0;
+}
+
+.gradient-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  background: var(--primary-400);
+  min-height: 4px;
+  transition: all var(--transition-fast);
+  position: relative;
+  cursor: pointer;
+}
+
+.gradient-bar:hover {
+  filter: brightness(1.1);
+}
+
+.gradient-bar-label {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: var(--gray-500);
+  white-space: nowrap;
+}
+
+.gradient-bar-count {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+/* === Daily Plan Page === */
+.daily-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.date-picker-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.date-nav {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--gray-300);
+  background: white;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--gray-600);
+  font-size: 14px;
+  transition: all var(--transition-fast);
+}
+
+.date-nav:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.filter-bar .form-select,
+.filter-bar .form-input {
+  width: auto;
+  min-width: 120px;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.task-card:hover {
+  border-color: var(--primary-200);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.task-number {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-400);
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.task-main { flex: 1; min-width: 0; }
+
+.task-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-800);
+  cursor: pointer;
+  display: inline;
+  transition: color var(--transition-fast);
+}
+
+.task-name:hover { color: var(--primary-600); text-decoration: underline; }
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.status-select {
+  appearance: none;
+  padding: 5px 28px 5px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+}
+
+.status-select[data-status="not_started"] { color: var(--gray-500); }
+.status-select[data-status="attempting"] { color: var(--warning-600); background-color: var(--warning-50); border-color: #FDE68A; }
+.status-select[data-status="ac_completed"] { color: var(--success-600); background-color: var(--success-50); border-color: #A7F3D0; }
+.status-select[data-status="gave_up"] { color: var(--danger-600); background-color: var(--danger-50); border-color: #FCA5A5; }
+
+/* Heatmap */
+.heatmap-section {
+  margin-top: var(--space-5);
+}
+
+.heatmap-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 2px;
+}
+
+.heatmap-day-label {
+  width: 28px;
+  font-size: 10px;
+  color: var(--gray-400);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.heatmap-cells {
+  display: flex;
+  gap: 2px;
+}
+
+.heatmap-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  transition: transform 0.15s ease;
+  cursor: pointer;
+}
+
+.heatmap-cell:hover { transform: scale(1.3); }
+
+.hm-level-0 { background: var(--gray-100); }
+.hm-level-1 { background: #BBF7D0; }
+.hm-level-2 { background: #4ADE80; }
+.hm-level-3 { background: #16A34A; }
+.hm-level-4 { background: #166534; }
+
+/* === Plan Preview Page === */
+.plan-preview-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.plan-preview-header {
+  text-align: center;
+  padding: var(--space-8) var(--space-5);
+  background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--primary-200);
+}
+
+.preview-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 12px;
+  background: var(--warning-500);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-4);
+}
+
+.preview-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: var(--space-2);
+}
+
+.preview-target {
+  font-size: 14px;
+  color: var(--gray-600);
+}
+
+.preview-stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-8);
+  margin-top: var(--space-5);
+}
+
+.preview-stat {
+  text-align: center;
+}
+
+.preview-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.preview-stat-label {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.plan-problem-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.plan-problem-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.plan-problem-item:hover {
+  border-color: var(--primary-200);
+}
+
+.plan-problem-drag {
+  cursor: grab;
+  color: var(--gray-300);
+  padding: 4px;
+}
+
+.plan-problem-remove {
+  opacity: 0;
+  color: var(--gray-300);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 4px;
+}
+
+.plan-problem-item:hover .plan-problem-remove {
+  opacity: 1;
+}
+
+.plan-problem-remove:hover { color: var(--danger-500); }
+
+.preview-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--gray-200);
+}
+
+/* === Settings Page === */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: 680px;
+}
+
+.settings-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.account-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.account-card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  transition: all var(--transition-fast);
+}
+
+.account-card:hover {
+  border-color: var(--primary-200);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.account-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.account-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+}
+
+.account-card-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.account-card-handle {
+  font-size: 11px;
+  color: var(--gray-500);
+  font-family: var(--font-mono);
+}
+
+.account-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  font-size: 12px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--gray-600);
+}
+
+.stat-item strong {
+  color: var(--gray-800);
+}
+
+.add-account-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--gray-400);
+}
+
+.add-account-card:hover {
+  border-color: var(--primary-400);
+  color: var(--primary-500);
+  background: var(--primary-50);
+}
+
+.add-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-2);
+  font-size: 20px;
+  transition: all var(--transition-fast);
+}
+
+.add-account-card:hover .add-icon {
+  background: var(--primary-100);
+  color: var(--primary-500);
+}
+
+.api-config-form {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.api-key-field {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.api-key-field .form-input {
+  flex: 1; font-family: var(--font-mono); }
+
+/* Toast Notification */
+.toast-container {
+  position: fixed;
+  top: var(--space-6);
+  right: var(--space-6);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  font-size: 12px;
+  animation: slideInRight 0.25s ease;
+  max-width: 320px;
+}
+
+.toast.success { border-left: 3px solid var(--success-500); }
+.toast.error { border-left: 3px solid var(--danger-500); }
+.toast.info { border-left: 3px solid var(--info-500); }
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-normal);
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal {
+  background: white;
+  border-radius: var(--radius-xl);
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  transform: scale(0.95);
+  transition: transform var(--transition-normal);
+}
+
+.modal-overlay.active .modal {
+  transform: scale(1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--gray-400); font-size: 18px; padding: 4px; }
+.modal-close:hover { color: var(--gray-700); }
+
+.modal-body { padding: var(--space-5); }
+.modal-footer { padding: var(--space-4) var(--space-5); border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: var(--space-3); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .menu-toggle { display: flex !important; }
+  .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  .eval-layout { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- App Container -->
+<div class="app-container">
+
+  <!-- ====== SIDEBAR NAVIGATION ====== -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">AT</div>
+      <div class="sidebar-title">ACM Tracker</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-label">主菜单</div>
+        <a class="nav-item active" data-page="dashboard" href="#" onclick="navigate('dashboard')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          总览面板
+        </a>
+        <a class="nav-item" data-page="eval" href="#" onclick="navigate('eval')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+          能力评估
+        </a>
+        <a class="nav-item" data-page="daily" href="#" onclick="navigate('daily')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          每日打卡
+          <span class="nav-badge">3</span>
+        </a>
+        <a class="nav-item" data-page="plan" href="#" onclick="navigate('plan')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          学习计划
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">系统</div>
+        <a class="nav-item" data-page="settings" href="#" onclick="navigate('settings')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          同步与配置
+        </a>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-mini">
+        <div class="user-avatar">CP</div>
+        <div class="user-info">
+          <div class="user-name"> Competitive Programmer</div>
+          <div class="user-handle">tourist_cf</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle btn-icon btn-ghost" onclick="toggleSidebar()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 class="page-title" id="pageTitle">总览面板</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="refreshData()" title="刷新数据">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          刷新
+        </button>
+        <button class="btn btn-primary btn-sm" id="syncBtn" onclick="syncAll()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          同步全部
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="content-area">
+
+      <!-- ========== PAGE 1: DASHBOARD ========== -->
+      <section class="page-view active" id="page-dashboard">
+        <!-- Metric Cards -->
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-icon" style="background: var(--primary-50);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-600)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="metric-label">总 AC 数量</div>
+            <div class="metric-value">1,247</div>
+            <span class="metric-change up">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+              +42 本月
+            </span>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: var(--success-50);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success-600)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div class="metric-label">整体 AC 率</div>
+            <div class="metric-value">67.3%</div>
+            <span class="metric-change up">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+              +2.1%
+            </span>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: var(--warning-50);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning-600)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="metric-label">最高通过难度</div>
+            <div class="metric-value">2400</div>
+            <span class="metric-change up">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+              NOI+ 档位
+            </span>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: #F3E8FF;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="metric-label">估算 Rating</div>
+            <div class="metric-value">~1850</div>
+            <span class="metric-change up">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+              Expert 级别
+            </span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- OJ Accounts Table -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">OJ 账号概览</div>
+                <div class="card-subtitle">已绑定 4 个平台账号</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="openAddAccountModal()">+ 添加账号</button>
+            </div>
+            <div class="card-body">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>平台</th>
+                    <th>用户名</th>
+                    <th>总提交</th>
+                    <th>AC 数</th>
+                    <th>AC 率</th>
+                    <th>最后同步</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span style="display:flex;align-items:center;gap:6px;"><span class="oj-avatar oj-cf" style="width:22px;height:22px;font-size:9px;">CF</span><strong>Codeforces</strong></span></td>
+                    <td><code style="font-size:12px;color:var(--primary-600);">tourist</code></td>
+                    <td>3,891</td>
+                    <td>2,456</td>
+                    <td><span class="tag diff-easy" style="border-radius:10px;padding:1px 8px;">63.1%</span></td>
+                    <td style="color:var(--gray-400);font-size:11px;">5 分钟前</td>
+                  </tr>
+                  <tr>
+                    <td><span style="display:flex;align-items:center;gap:6px;"><span class="oj-avatar oj-luogu" style="width:22px;height:22px;font-size:9px;">LG</span><strong>洛谷</strong></span></td>
+                    <td><code style="font-size:12px;color:var(--primary-600);">liuzhengyang</code></td>
+                    <td>1,203</td>
+                    <td>789</td>
+                    <td><span class="tag diff-medium" style="border-radius:10px;padding:1px 8px;">65.6%</span></td>
+                    <td style="color:var(--gray-400);font-size:11px;">2 小时前</td>
+                  </tr>
+                  <tr>
+                    <td><span style="display:flex;align-items:center;gap:6px;"><span class="oj-avatar oj-atcoder" style="width:22px;height:22px;font-size:9px;color:white;background:#000;">AC</span><strong>AtCoder</strong></span></td>
+                    <td><code style="font-size:12px;color:var(--primary-600);">chokudai</code></td>
+                    <td>567</td>
+                    <td>412</td>
+                    <td><span class="tag diff-easy" style="border-radius:10px;padding:1px 8px;">72.7%</span></td>
+                    <td style="color:var(--gray-400);font-size:11px;">1 天前</td>
+                  </tr>
+                  <tr>
+                    <td><span style="display:flex;align-items:center;gap:6px;"><span class="oj-avatar oj-nowcoder" style="width:22px;height:22px;font-size:9px;">NC</span><strong>牛客</strong></span></td>
+                    <td><code style="font-size:12px;color:var(--primary-600);">acm_fan</code></td>
+                    <td>234</td>
+                    <td>156</td>
+                    <td><span class="tag diff-hard" style="border-radius:10px;padding:1px 8px;border-color:#FCD34D;color:#92400E;background:#FEF3C7;">66.7%</span></td>
+                    <td style="color:var(--gray-400);font-size:11px;">3 天前</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Quick Actions Panel -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">快捷操作</div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <button class="btn btn-primary" style="width:100%;justify-content:flex-start;" onclick="navigate('plan');showToast('正在调用 AI 生成学习计划...','info')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                  AI 生成学习计划
+                </button>
+                <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="navigate('eval')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                  运行能力评估
+                </button>
+                <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="navigate('daily')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  查看今日题单
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== PAGE 2: EVALUATION REPORT ========== -->
+      <section class="page-view" id="page-eval">
+        <div class="card" style="margin-bottom:var(--space-6)">
+          <div class="card-header">
+            <div>
+              <div class="card-title">能力评估报告</div>
+              <div class="card-subtitle">基于最近 365 天的提交数据分析 · 更新于 2026-07-03</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="showToast('正在重新运行能力评估...','info')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              重新评估
+            </button>
+          </div>
+        </div>
+
+        <div class="eval-layout">
+          <!-- Left: Radar Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">六维能力雷达</div>
+            </div>
+            <div class="card-body radar-container">
+              <svg class="radar-chart-svg" viewBox="0 0 260 260" id="radarChart"></svg>
+            </div>
+          </div>
+
+          <!-- Right: Weak Points + Gradient -->
+          <div style="display:flex;flex-direction:column;gap:var(--space-6);">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">薄弱点分析</div>
+                <div class="card-subtitle">需要重点加强的领域</div>
+              </div>
+              <div class="card-body">
+                <div class="weak-point-list">
+                  <div class="weak-point-item">
+                    <span class="weak-rank">1</span>
+                    <div class="weak-info">
+                      <div class="weak-name">动态规划</div>
+                      <div class="weak-desc">区间 DP、树形 DP 掌握不足</div>
+                    </div>
+                    <span class="weak-score">42%</span>
+                  </div>
+                  <div class="weak-point-item">
+                    <span class="weak-rank">2</span>
+                    <div class="weak-info">
+                      <div class="weak-name">字符串算法</div>
+                      <div class="weak-desc">后缀结构、自动机接触较少</div>
+                    </div>
+                    <span class="weak-score">48%</span>
+                  </div>
+                  <div class="weak-point-item">
+                    <span class="weak-rank">3</span>
+                    <div class="weak-info">
+                      <div class="weak-name">图论进阶</div>
+                      <div class="weak-desc">网络流、最小割练习不够</div>
+                    </div>
+                    <span class="weak-score">55%</span>
+                  </div>
+                  <div class="weak-point-item">
+                    <span class="weak-rank">4</span>
+                    <div class="weak-info">
+                      <div class="weak-name">数论</div>
+                      <div class="weak-desc">模运算、组合数学需巩固</div>
+                    </div>
+                    <span class="weak-score">58%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">难度梯度分布</div>
+                <div class="card-subtitle">各难度段 AC 题目数量（CF rating 标准）</div>
+              </div>
+              <div class="card-body">
+                <div class="gradient-chart" id="gradientChart"></div>
+                <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--gray-500);">
+                  横轴：CF Rating 分段 &nbsp;|&nbsp; 纵轴：已 AC 题目数
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== PAGE 3: DAILY PLAN ========== -->
+      <section class="page-view" id="page-daily">
+        <!-- Header with Date Picker -->
+        <div class="daily-header">
+          <div class="date-picker-group">
+            <button class="date-nav">&lt;</button>
+            <span id="currentDate">2026 年 7 月 3 日 · 星期五</span>
+            <button class="date-nav">&gt;</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);">
+            <span style="font-size:12px;color:var(--gray-500);">今日进度：</span>
+            <span style="font-size:14px;font-weight:600;color:var(--success-600);">1/4 已完成</span>
+            <div class="progress-bar" style="width:80px;">
+              <div class="progress-fill" style="width:25%;background:var(--success-500);"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <select class="form-select" style="width:auto;" onchange="filterTasks()">
+            <option value="all">全部 OJ</option>
+            <option value="codeforces">Codeforces</option>
+            <option value="luogu">洛谷</option>
+            <option value="atcoder">AtCoder</option>
+            <option value="nowcoder">牛客</option>
+          </select>
+          <select class="form-select" style="width:auto;" onchange="filterTasks()">
+            <option value="all">全部状态</option>
+            <option value="not_started">未开始</option>
+            <option value="attempting">尝试中</option>
+            <option value="ac_completed">已 AC</option>
+            <option value="gave_up">已放弃</option>
+          </select>
+          <input type="text" class="form-input" placeholder="搜索题目..." style="width:180px;" oninput="filterTasks()">
+        </div>
+
+        <!-- Task List -->
+        <div class="task-list" id="taskList">
+          <!-- Task 1: Completed -->
+          <div class="task-card" data-oj="codeforces" data-status="ac_completed">
+            <span class="task-number">1</span>
+            <div class="task-main">
+              <div class="task-name" onclick="openExternal('https://codeforces.com/problemset/problem/1462/C')">Unique Number</div>
+              <div class="task-meta">
+                <span class="tag oj-tag">Codeforces</span>
+                <span class="tag difficulty-tag diff-easy">800 入门</span>
+                <span style="color:var(--gray-400)">Greedy, Math</span>
+              </div>
+            </div>
+            <div class="task-actions">
+              <select class="status-select" data-status="ac_completed" onchange="updateTaskStatus(this)">
+                <option value="not_started">未开始</option>
+                <option value="attempting">尝试中</option>
+                <option value="ac_completed" selected>已 AC</option>
+                <option value="gave_up">已放弃</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" title="跳转原题" onclick="openExternal('https://codeforces.com/problemset/problem/1462/C')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Task 2: Attempting -->
+          <div class="task-card" data-oj="luogu" data-status="attempting">
+            <span class="task-number">2</span>
+            <div class="task-main">
+              <div class="task-name" onclick="openExternal('https://www.luogu.com.cn/problem/P3628')">【APIO2010】特别行动队</div>
+              <div class="task-meta">
+                <span class="tag oj-tag">洛谷</span>
+                <span class="tag difficulty-tag diff-hard">1900 普及+/提高-</span>
+                <span style="color:var(--gray-400)">DP, 单调队列优化</span>
+              </div>
+            </div>
+            <div class="task-actions">
+              <select class="status-select" data-status="attempting" onchange="updateTaskStatus(this)">
+                <option value="not_started">未开始</option>
+                <option value="attempting" selected>尝试中</option>
+                <option value="ac_completed">已 AC</option>
+                <option value="gave_up">已放弃</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" title="跳转原题" onclick="openExternal('https://www.luogu.com.cn/problem/P3628')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Task 3: Not Started -->
+          <div class="task-card" data-oj="atcoder" data-status="not_started">
+            <span class="task-number">3</span>
+            <div class="task-main">
+              <div class="task-name" onclick="openExternal('https://atcoder.jp/contests/abc366/tasks/abc366_e')">Travel by Car</div>
+              <div class="task-meta">
+                <span class="tag oj-tag">AtCoder</span>
+                <span class="tag difficulty-tag diff-veryhard">2100 提高+</span>
+                <span style="color:var(--gray-400)">Dijkstra, 最短路变形</span>
+              </div>
+            </div>
+            <div class="task-actions">
+              <select class="status-select" data-status="not_started" onchange="updateTaskStatus(this)">
+                <option value="not_started" selected>未开始</option>
+                <option value="attempting">尝试中</option>
+                <option value="ac_completed">已 AC</option>
+                <option value="gave_up">已放弃</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" title="跳转原题" onclick="openExternal('https://atcoder.jp/contests/abc366/tasks/abc366_e')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Task 4: Not Started -->
+          <div class="task-card" data-oj="codeforces" data-status="not_started">
+            <span class="task-number">4</span>
+            <div class="task-main">
+              <div class="task-name" onclick="openExternal('https://codeforces.com/problemset/problem/1741/E')">Sending a Sequence Over the Network</div>
+              <div class="task-meta">
+                <span class="tag oj-tag">Codeforces</span>
+                <span class="tag difficulty-tag diff-hard">1700 普及-/提高</span>
+                <span style="color:var(--gray-400)">DP, 前缀和</span>
+              </div>
+            </div>
+            <div class="task-actions">
+              <select class="status-select" data-status="not_started" onchange="updateTaskStatus(this)">
+                <option value="not_started" selected>未开始</option>
+                <option value="attempting">尝试中</option>
+                <option value="ac_completed">已 AC</option>
+                <option value="gave_up">已放弃</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" title="跳转原题" onclick="openExternal('https://codeforces.com/problemset/problem/1741/E')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Heat Map Section -->
+        <div class="heatmap-section card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">本周打卡热力图</div>
+              <div class="card-subtitle">过去 7 天的完成情况一览</div>
+            </div>
+          </div>
+          <div class="card-body" id="heatmapContainer"></div>
+        </div>
+      </section>
+
+      <!-- ========== PAGE 4: AI PLAN PREVIEW ========== -->
+      <section class="page-view" id="page-plan">
+        <div class="plan-preview-container">
+          <!-- Preview Header -->
+          <div class="plan-preview-header">
+            <span class="preview-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Draft Plan 草稿预览
+            </span>
+            <h2 class="preview-title">目标 Rating: CF 2100</h2>
+            <p class="preview-target">为期 8 周的强化训练计划，聚焦动态规划与图论短板</p>
+            <div class="preview-stats">
+              <div class="preview-stat">
+                <div class="preview-stat-value">56</div>
+                <div class="preview-stat-label">计划题目</div>
+              </div>
+              <div class="preview-stat">
+                <div class="preview-stat-value">8 周</div>
+                <div class="preview-stat-label">预计周期</div>
+              </div>
+              <div class="preview-stat">
+                <div class="preview-stat-value">~7/天</div>
+                <div class="preview-stat-label">日均任务</div>
+              </div>
+              <div class="preview-stat">
+                <div class="preview-stat-value">1900→</div>
+                <div class="preview-stat-label">当前水平</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Problem List (Editable) -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">题目列表（拖拽排序 / 点击移除）</div>
+              <div class="card-subtitle">共 56 题 · 可编辑后确认导入</div>
+            </div>
+            <div class="card-body">
+              <div class="plan-problem-list" id="planProblemList">
+                <!-- Week 1 Header -->
+                <div style="font-size:12px;font-weight:600;color:var(--primary-600);margin:8px 0 4px;display:flex;align-items:center;gap:6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  第 1 周 — 基础 DP 复习
+                </div>
+
+                <div class="plan-problem-item">
+                  <span class="plan-problem-drag">⠿</span>
+                  <span class="tag oj-tag">CF</span>
+                  <span style="flex:1;font-size:13px;font-weight:500;">1462C - Unique Number</span>
+                  <span class="tag difficulty-tag diff-easy">800</span>
+                  <span class="plan-problem-remove" onclick="removePlanItem(this)" title="移除">✕</span>
+                </div>
+                <div class="plan-problem-item">
+                  <span class="plan-problem-drag">⠿</span>
+                  <span class="tag oj-tag">CF</span>
+                  <span style="flex:1;font-size:13px;font-weight:50%;">1741E - Sending a Sequence Over Network</span>
+                  <span class="tag difficulty-tag diff-hard">1700</span>
+                  <span class="plan-problem-remove" onclick="removePlanItem(this)" title="移除">✕</span>
+                </div>
+                <div class="plan-problem-item">
+                  <span class="plan-problem-drag">⠿</span>
+                  <span class="tag oj-tag" style="background:#E0F2FE;color:#0369A1;border-color:#BAE6FD;">LG</span>
+                  <span style="flex:1;font-size:13px;font-weight:50%;">P3628 - 特别行动队</span>
+                  <span class="tag difficulty-tag diff-hard">1900</span>
+                  <span class="plan-problem-remove" onclick="removePlanItem(this)" title="移除">✕</span>
+                </div>
+                <div class="plan-problem-item">
+                  <span class="plan-problem-drag">⠿</span>
+                  <span class="tag oj-tag" style="background:#F0F0F0;color:#333;border-color:#CCC;">AC</span>
+                  <span style="flex:1;font-size:13px;font-weight:50%;">abc366_e - Travel by Car</span>
+                  <span class="tag difficulty-tag diff-veryhard">2100</span>
+                  <span class="plan-problem-remove" onclick="removePlanItem(this)" title="移除">✕</span>
+                </div>
+
+                <!-- Week 2 Header -->
+                <div style="font-size:12px;font-weight:600;color:var(--primary-600);margin:16px 0 4px;display:flex;align-items:center;gap:6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  第 2 周 — 区间 DP 与树形 DP
+                </div>
+
+                <div class="plan-problem-item">
+                  <span class="plan-problem-drag">⠿</span>
+                  <span class="tag oj-tag">CF</span>
+                  <span style="flex:1;font-size:13px;font-weight:50%;">1398D - Colored Rectangles</span>
+                  <span class="tag difficulty-tag diff-hard">1600</span>
+                  <span class="plan-problem-remove" onclick="removePlanItem(this)" title="移除">✕</span>
+                </div>
+                <div class="plan-problem-item">
+                  <span class="plan-problem-drag">⠿</span>
+                  <span class="tag oj-tag">CF</span>
+                  <span style="flex:1;font-size:13px;font-weight:50%;">1197D - Yet Another Subarray Problem</span>
+                  <span class="tag difficulty-tag diff-veryhard">2000</span>
+                  <span class="plan-problem-remove" onclick="removePlanItem(this)" title="移除">✕</span>
+                </div>
+                <div class="plan-problem-item">
+                  <span class="plan-problem-drag">⠿</span>
+                  <span class="tag oj-tag">CF</span>
+                  <span style="flex:1;font-size:13px;font-weight:50%;">1500C - Bulbs</span>
+                  <span class="tag difficulty-tag diff-veryhard">2300</span>
+                  <span class="plan-problem-remove" onclick="removePlanItem(this)" title="移除">✕</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="preview-actions">
+            <button class="btn btn-danger btn-sm" onclick="discardPlan()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              丢弃草稿
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="editPlan()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              编辑调整
+            </button>
+            <button class="btn btn-success btn-sm" onclick="confirmPlan()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              确认导入
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== PAGE 5: SETTINGS ========== -->
+      <section class="page-view" id="page-settings">
+        <div class="settings-grid">
+          <!-- OJ Accounts Management -->
+          <div>
+            <h3 class="settings-section-title">OJ 账号管理</h3>
+            <div class="account-cards">
+              <!-- Codeforces Account -->
+              <div class="account-card">
+                <div class="account-card-header">
+                  <div class="account-card-avatar oj-cf">CF</div>
+                  <div>
+                    <div class="account-card-name">Codeforces</div>
+                    <div class="account-card-handle">@tourist</div>
+                  </div>
+                </div>
+                <div class="account-card-stats">
+                  <div class="stat-item"><strong>2456</strong> AC</div>
+                  <div class="stat-item"><strong>63%</strong> AC率</div>
+                  <div class="stat-item"><strong>R2400</strong> 最高</div>
+                  <div class="stat-item" style="color:var(--success-500);font-weight:500;">● 已绑定</div>
+                </div>
+              </div>
+
+              <!-- Luogu Account -->
+              <div class="account-card">
+                <div class="account-card-header">
+                  <div class="account-card-avatar oj-luogu">LG</div>
+                  <div>
+                    <div class="account-card-name">洛谷 Luogu</div>
+                    <div class="account-card-handle">@liuzhengyang</div>
+                  </div>
+                </div>
+                <div class="account-card-stats">
+                  <div class="stat-item"><strong>789</strong> AC</div>
+                  <div class="stat-item"><strong>66%</strong> AC率</div>
+                  <div class="stat-item"><strong>4T</strong> 通过</div>
+                  <div class="stat-item" style="color:var(--success-500);font-weight:500;">● 已绑定</div>
+                </div>
+              </div>
+
+              <!-- AtCoder Account -->
+              <div class="account-card">
+                <div class="account-card-header">
+                  <div class="account-card-avatar oj-atcoder">AC</div>
+                  <div>
+                    <div class="account-card-name">AtCoder</div>
+                    <div class="account-card-handle">@chokudai</div>
+                  </div>
+                </div>
+                <div class="account-card-stats">
+                  <div class="stat-item"><strong>412</strong> AC</div>
+                  <div class="stat-item"><strong>73%</strong> AC率</div>
+                  <div class="stat-item"><strong>Arc</strong> 段位</div>
+                  <div class="stat-item" style="color:var(--success-500);font-weight:500;">● 已绑定</div>
+                </div>
+              </div>
+
+              <!-- NowCoder Account -->
+              <div class="account-card">
+                <div class="account-card-header">
+                  <div class="account-card-avatar oj-nowcoder">NC</div>
+                  <div>
+                    <div class="account-card-name">牛客 NowCoder</div>
+                    <div class="account-card-handle">@acm_fan</div>
+                  </div>
+                </div>
+                <div class="account-card-stats">
+                  <div class="stat-item"><strong>156</strong> AC</div>
+                  <div class="stat-item"><strong>67%</strong> AC率</div>
+                  <div class="stat-item"><strong>23</strong> 场</div>
+                  <div class="stat-item" style="color:var(--success-500);font-weight:500;">● 已绑定</div>
+                </div>
+              </div>
+
+              <!-- Add Account Card -->
+              <div class="add-account-card" onclick="openAddAccountModal()">
+                <div class="add-icon">+</div>
+                <div style="font-size:13px;font-weight:500;">添加新账号</div>
+                <div style="font-size:11px;margin-top:2px;">支持 CF / 洛谷 / AtCoder / 牛客</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LLM API Configuration -->
+          <div>
+            <h3 class="settings-section-title">LLM API 配置</h3>
+            <div class="api-config-form">
+              <div class="form-group">
+                <label class="form-label">API Provider</label>
+                <select class="form-select">
+                  <option selected>OpenAI (GPT-4o)</option>
+                  <option>Claude (Anthropic)</option>
+                  <option>DeepSeek</option>
+                  <option>自定义 OpenAI 兼容 API</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">API Base URL</label>
+                <input type="text" class="form-input" value="https://api.openai.com/v1" placeholder="https://api.openai.com/v1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">API Key</label>
+                <div class="api-key-field">
+                  <input type="password" class="form-input" id="apiKeyInput" value="sk-****...****" placeholder="sk-...">
+                  <button class="btn btn-secondary btn-sm" onclick="toggleApiKeyVisibility()">显示</button>
+                </div>
+                <p class="form-hint">密钥仅存储在本地配置文件中，不会上传至任何服务器</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">模型选择</label>
+                <select class="form-select">
+                  <option selected>gpt-4o (推荐)</option>
+                  <option>gpt-4o-mini</option>
+                  <option>o3-mini</option>
+                  <option>claude-sonnet-4-20250514</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="display:flex;align-items:center;gap:8px;">
+                  自动同步
+                  <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="switch-slider"></span>
+                  </label>
+                </label>
+                <p class="form-hint">开启后每隔指定小时自动同步各 OJ 的提交记录</p>
+              </div>
+              <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4);">
+                <button class="btn btn-primary btn-sm" onclick="saveSettings();showToast('设置已保存','success')">
+                  保存配置
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="testApiConnection()">
+                  测试连接
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- end content-area -->
+  </main>
+</div><!-- end app-container -->
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Add Account Modal -->
+<div class="modal-overlay" id="addAccountModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">添加 OJ 账号</h3>
+      <button class="modal-close" onclick="closeAddAccountModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">选择平台</label>
+        <select class="form-select" id="newOjPlatform">
+          <option value="codeforces">Codeforces</option>
+          <option value="luogu">洛谷 Luogu</option>
+          <option value="atcoder">AtCoder</option>
+          <option value="nowcoder">牛客 NowCoder</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">用户名 / Handle</label>
+        <input type="text" class="form-input" id="newOjHandle" placeholder="例如: tourist, liuzhengyang ...">
+        <p class="form-hint">输入您在该平台的用户名或 Handle</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" onclick="closeAddAccountModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="addNewAccount()">添加并同步</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// Navigation System
+// ============================================
+const pageTitles = {
+  dashboard: '总览面板',
+  eval: '能力评估报告',
+  daily: '每日打卡',
+  plan: 'AI 学习计划',
+  settings: '同步与配置'
+};
+
+function navigate(pageId) {
+  // Update nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === pageId);
+  });
+
+  // Update page views
+  document.querySelectorAll('.page-view').forEach(view => {
+    view.classList.toggle('active', view.id === `page-${pageId}`);
+  });
+
+  // Update title
+  document.getElementById('pageTitle').textContent = pageTitles[pageId] || '';
+
+  // Close mobile sidebar
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ============================================
+// Toast Notifications
+// ============================================
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: '&#10003;', error: '&#10007;', info: '&#9432;' };
+  toast.innerHTML = `<span>${icons[type] || ''}</span> ${message}`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = 'all 0.25s ease';
+    setTimeout(() => toast.remove(), 250);
+  }, 3000);
+}
+
+// ============================================
+// Data Operations (Mock)
+// ============================================
+function syncAll() {
+  const btn = document.getElementById('syncBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 同步中...';
+  showToast('正在同步所有 OJ 数据...', 'info');
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> 同步全部';
+    showToast('同步完成！新增 12 条记录', 'success');
+  }, 2500);
+}
+
+function refreshData() {
+  showToast('数据已刷新', 'success');
+}
+
+// ============================================
+// Task Status Updates
+// ============================================
+function updateTaskStatus(selectEl) {
+  const newStatus = selectEl.value;
+  const taskCard = selectEl.closest('.task-card');
+
+  selectEl.dataset.status = newStatus;
+  taskCard.dataset.status = newStatus;
+
+  const statusLabels = {
+    not_started: '未开始',
+    attempting: '尝试中',
+    ac_completed: '已 AC',
+    gave_up: '已放弃'
+  };
+
+  showToast(`状态更新为: ${statusLabels[newStatus]}`, 'success');
+  updateDailyProgress();
+}
+
+function updateDailyProgress() {
+  const total = document.querySelectorAll('.task-card').length;
+  const completed = document.querySelectorAll('.task-card[data-status="ac_completed"]').length;
+  const pct = Math.round((completed / total) * 100);
+  // Could update header progress here
+}
+
+function filterTasks() {
+  // Mock filter implementation
+}
+
+// ============================================
+// External Link Opener (VSCode API)
+// ============================================
+function openExternal(url) {
+  if (typeof vscode !== 'undefined' && vscode.env && vscode.env.openExternal) {
+    vscode.env.openExternal(/* @ts-ignore */ url);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+// ============================================
+// Modal Controls
+// ============================================
+function openAddAccountModal() {
+  document.getElementById('addAccountModal').classList.add('active');
+}
+
+function closeAddAccountModal() {
+  document.getElementById('addAccountModal').classList.remove('active');
+}
+
+function addNewAccount() {
+  const platform = document.getElementById('newOjPlatform').value;
+  const handle = document.getElementById('newOjHandle').value.trim();
+  if (!handle) {
+    showToast('请输入用户名', 'error');
+    return;
+  }
+  closeAddAccountModal();
+  showToast(`正在添加 ${platform} 账号: ${handle}...`, 'info');
+  setTimeout(() => showToast(`${platform} 账号 ${handle} 绑定成功!`, 'success'), 1200);
+}
+
+// ============================================
+// Plan Actions (ADR-007)
+// ============================================
+function removePlanItem(el) {
+  el.closest('.plan-problem-item').style.opacity = '0';
+  el.closest('.plan-problem-item').style.transform = 'scale(0.95)';
+  setTimeout(() => el.closest('.plan-problem-item').remove(), 200);
+  showToast('已从草稿中移除该题', 'info');
+}
+
+function discardPlan() {
+  if (confirm('确定要丢弃当前草稿吗？此操作不可撤销。')) {
+    showToast('草稿已丢弃', 'info');
+  }
+}
+
+function editPlan() {
+  showToast('进入编辑模式...', 'info');
+}
+
+function confirmPlan() {
+  showToast('正在导入学习计划到数据库...', 'success');
+  setTimeout(() => {
+    showToast('学习计划已成功导入！共 56 道题目已分配到每日任务。', 'success');
+    navigate('daily');
+  }, 1500);
+}
+
+// ============================================
+// Settings
+// ============================================
+function toggleApiKeyVisibility() {
+  const input = document.getElementById('apiKeyInput');
+  const btn = event.target;
+  if (input.type === 'password') {
+    input.type = 'text';
+    input.value = 'sk-proj-xxxxxxxxxxxxx';
+    btn.textContent = '隐藏';
+  } else {
+    input.type = 'password';
+    input.value = 'sk-****...****';
+    btn.textContent = '显示';
+  }
+}
+
+function saveSettings() {
+  // Mock save
+}
+
+function testApiConnection() {
+  showToast('正在测试 API 连接...', 'info');
+  setTimeout(() => showToast('连接成功！API Key 有效。', 'success'), 1500);
+}
+
+// ============================================
+// Radar Chart Rendering
+// ============================================
+function renderRadarChart() {
+  const svg = document.getElementById('radarChart');
+  if (!svg) return;
+
+  const cx = 130, cy = 130, r = 100;
+  const dimensions = ['基础算法', '数据结构', '动态规划', '图论', '数学', '字符串'];
+  const values = [0.88, 0.75, 0.42, 0.55, 0.58, 0.48]; // 0-1 scale
+  const n = dimensions.length;
+  const angleStep = (Math.PI * 2) / n;
+
+  let html = '';
+
+  // Draw concentric circles (grid lines)
+  for (let i = 1; i <= 4; i++) {
+    const radius = (r * i) / 4;
+    let pts = [];
+    for (let j = 0; j < n; j++) {
+      const a = j * angleStep - Math.PI / 2;
+      pts.push(`${cx + radius * Math.cos(a)},${cy + radius * Math.sin(a)}`);
+    }
+    html += `<polygon points="${pts.join(' ')}" fill="none" stroke="#E5E7EB" stroke-width="0.5"/>`;
+  }
+
+  // Draw axis lines
+  for (let i = 0; i < n; i++) {
+    const a = i * angleStep - Math.PI / 2;
+    html += `<line x1="${cx}" y1="${cy}" x2="${cx + r * Math.cos(a)}" y2="${cy + r * Math.sin(a)}" stroke="#E5E7EB" stroke-width="0.5"/>`;
+
+    // Labels
+    const labelR = r + 20;
+    const lx = cx + labelR * Math.cos(a);
+    const ly = cy + labelR * Math.sin(a);
+    html += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="#6B7280">${dimensions[i]}</text>`;
+  }
+
+  // Data polygon
+  let dataPts = [];
+  for (let i = 0; i < n; i++) {
+    const a = i * angleStep - Math.PI / 2;
+    const vr = r * values[i];
+    dataPts.push(`${cx + vr * Math.cos(a)},${cy + vr * Math.sin(a)}`);
+  }
+  html += `<polygon points="${dataPts.join(' ')}" fill="rgba(59,130,246,0.15)" stroke="#3B82F6" stroke-width="2"/>`;
+
+  // Data points
+  for (let i = 0; i < n; i++) {
+    const a = i * angleStep - Math.PI / 2;
+    const vr = r * values[i];
+    const px = cx + vr * Math.cos(a);
+    const py = cy + vr * Math.sin(a);
+    html += `<circle cx="${px}" cy="${py}" r="4" fill="#2563EB"/>`;
+    // Value labels near points
+    html += `<text x="${px}" y="${py - 10}" text-anchor="middle" font-size="10" font-weight="600" fill="#1E40AF">${Math.round(values[i]*100)}%</text>`;
+  }
+
+  svg.innerHTML = html;
+}
+
+// ============================================
+// Gradient Chart Rendering
+// ============================================
+function renderGradientChart() {
+  const container = document.getElementById('gradientChart');
+  if (!container) return;
+
+  const buckets = [
+    { range: '800-', count: 142 },
+    { range: '1000', count: 189 },
+    { range: '1200', count: 167 },
+    { range: '1400', count: 134 },
+    { range: '1600', count: 98 },
+    { range: '1800', count: 72 },
+    { range: '2000', count: 45 },
+    { range: '2200', count: 28 },
+    { range: '2400+', count: 12 }
+  ];
+
+  const maxCount = Math.max(...buckets.map(b => b.count));
+
+  let html = '';
+  buckets.forEach(b => {
+    const h = Math.max((b.count / maxCount) * 120, 4);
+    const hue = 200 - (b.count / maxCount) * 60; // blue to teal gradient
+    html += `
+      <div class="gradient-bar" style="height:${h}px;background:hsl(${hue},70%,55%);" title="${b.range}: ${b.count} 题">
+        <span class="gradient-bar-count">${b.count}</span>
+        <span class="gradient-bar-label">${b.range}</span>
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ============================================
+// Heatmap Rendering
+// ============================================
+function renderHeatmap() {
+  const container = document.getElementById('heatmapContainer');
+  if (!container) return;
+
+  const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  // Mock heatmap data: 4 weeks x 7 days
+  const data = [
+    [2,3,1,4,2,0,1],
+    [1,4,3,2,3,1,2],
+    [3,2,4,1,3,2,1],  // current week
+    [0,0,0,0,1,0,0]     // future days
+  ];
+
+  let html = '';
+  for (let row = 0; row < 4; row++) {
+    html += `<div class="heatmap-row">`;
+    html += `<span class="heatmap-day-label">${days[row] || ''}</span>`;
+    html += `<div class="heatmap-cells">`;
+    for (let col = 0; col < 7; col++) {
+      const val = data[row][col];
+      let level = 0;
+      if (val >= 4) level = 4;
+      else if (val >= 3) level = 3;
+      else if (val >= 2) level = 2;
+      else if (val >= 1) level = 1;
+      html += `<div class="heatmap-cell hm-level-${level}" title="第${col+1}周${days[row]}: 完成 ${val} 题"></div>`;
+    }
+    html += `</div></div>`;
+  }
+  container.innerHTML = html;
+}
+
+// ============================================
+// Initialize on Load
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  renderRadarChart();
+  renderGradientChart();
+  renderHeatmap();
+});
+</script>
+
+</body>
+</html>

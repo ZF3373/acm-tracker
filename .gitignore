@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.db
+.env
+.acm-tracker/
+out/
+node_modules/
+.vscode-test/
+*.vsix
+
+# F6: 补充
+.vscode/settings.json
+*.log
+secrets.*
+config.local.yaml
